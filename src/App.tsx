@@ -17,7 +17,7 @@ import { MultiSelectDropdown } from './components/MultiSelectDropdown';
 import { generateScript, generateImages, generateVideo, extractPrompts, suggestDetailedNiches, ScriptParams } from './services/gemini';
 import Markdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
-import { Loader2, Copy, Check, Sparkles, Image as ImageIcon, Video, FileText, KeyRound, Download, Upload } from 'lucide-react';
+import { Loader2, Copy, Check, Sparkles, Image as ImageIcon, Video, FileText, KeyRound, Download, Upload, X } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -31,6 +31,8 @@ declare global {
 export default function App() {
   const [activeTab, setActiveTab] = useState<'script' | 'image' | 'video'>('script');
   const [hasApiKey, setHasApiKey] = useState(false);
+  const [customApiKey, setCustomApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   const [params, setParams] = useState<ScriptParams>({
     scriptIdea: "",
@@ -90,6 +92,8 @@ export default function App() {
       if (window.aistudio?.hasSelectedApiKey) {
         const hasKey = await window.aistudio.hasSelectedApiKey();
         setHasApiKey(hasKey);
+      } else {
+        setHasApiKey(!!localStorage.getItem('gemini_api_key'));
       }
     };
     checkApiKey();
@@ -99,7 +103,17 @@ export default function App() {
     if (window.aistudio?.openSelectKey) {
       await window.aistudio.openSelectKey();
       setHasApiKey(true);
+    } else {
+      setShowApiKeyModal(true);
     }
+  };
+
+  const handleSaveCustomApiKey = (key: string) => {
+    const trimmedKey = key.trim();
+    localStorage.setItem('gemini_api_key', trimmedKey);
+    setCustomApiKey(trimmedKey);
+    setHasApiKey(!!trimmedKey);
+    setShowApiKeyModal(false);
   };
 
   // Update detailed niche when main content group changes
@@ -163,7 +177,7 @@ export default function App() {
         contentGoal: params.contentGoal,
         businessType: params.businessType,
         mainContentGroup: params.mainContentGroup
-      });
+      }, customApiKey);
       if (niches.length > 0) {
         setDynamicNiches(niches);
         setParams(prev => ({ ...prev, detailedNiche: niches[0] }));
@@ -186,7 +200,7 @@ export default function App() {
     }
 
     try {
-      const script = await generateScript(params);
+      const script = await generateScript(params, customApiKey);
       setResult(script);
     } catch (error) {
       alert("Lỗi khi tạo kịch bản. Vui lòng thử lại.");
@@ -199,7 +213,7 @@ export default function App() {
     if (!result) return;
     setIsExtracting(true);
     try {
-      const { imagePrompts: newImagePrompts, videoPrompts: newVideoPrompts } = await extractPrompts(result, params.sceneCount);
+      const { imagePrompts: newImagePrompts, videoPrompts: newVideoPrompts } = await extractPrompts(result, params.sceneCount, customApiKey);
       setImagePrompts(newImagePrompts);
       setVideoPrompts(newVideoPrompts);
       alert("Đã trích xuất prompt thành công!");
@@ -220,7 +234,7 @@ export default function App() {
     setIsGeneratingImage(newIsGenerating);
     
     try {
-      const base64Array = await generateImages(prompt, imageAspectRatio, 4);
+      const base64Array = await generateImages(prompt, imageAspectRatio, 4, customApiKey);
       const newImages = [...generatedImages];
       newImages[index] = base64Array;
       setGeneratedImages(newImages);
@@ -260,7 +274,7 @@ export default function App() {
           updated[index] = msg;
           return updated;
         });
-      });
+      }, customApiKey);
       
       const newVideos = [...generatedVideos];
       newVideos[index] = videoUrl;
@@ -927,6 +941,66 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* API Key Modal */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">
+            <button 
+              onClick={() => setShowApiKeyModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Nhập Gemini API Key</h2>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-6">
+              Để sử dụng tính năng tạo ảnh và video, bạn cần cung cấp Gemini API Key. Key này sẽ được lưu an toàn trên trình duyệt của bạn.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">API Key của bạn</label>
+                <input 
+                  type="password"
+                  value={customApiKey}
+                  onChange={(e) => setCustomApiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+                />
+              </div>
+              
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <p className="text-xs text-blue-800">
+                  <strong>Lưu ý:</strong> Để tạo Video (Veo), bạn cần sử dụng API Key từ tài khoản Google Cloud đã bật thanh toán (Billing).
+                </p>
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <button 
+                  onClick={() => setShowApiKeyModal(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                >
+                  Hủy
+                </button>
+                <button 
+                  onClick={() => handleSaveCustomApiKey(customApiKey)}
+                  disabled={!customApiKey.trim()}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  Lưu API Key
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

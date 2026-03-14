@@ -1,6 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+function getAI(customApiKey?: string) {
+  const key = customApiKey || process.env.API_KEY || process.env.GEMINI_API_KEY;
+  if (!key) {
+    throw new Error("Vui lòng cung cấp API Key để sử dụng tính năng này.");
+  }
+  return new GoogleGenAI({ apiKey: key });
+}
 
 function handleGeminiError(error: any, defaultMessage: string): never {
   console.error(defaultMessage, error);
@@ -28,7 +34,7 @@ export interface ScriptParams {
   additionalContext: string;
 }
 
-export async function generateScript(params: ScriptParams): Promise<string> {
+export async function generateScript(params: ScriptParams, customApiKey?: string): Promise<string> {
   const prompt = `
 Bạn là một chuyên gia sáng tạo nội dung, đạo diễn video và copywriter hàng đầu.
 Hãy tạo một ${params.outputFormat} dựa trên các thông tin sau:
@@ -72,6 +78,7 @@ KỊCH BẢN VIDEO (THỜI LƯỢNG: ~XX GIÂY)
 `;
 
   try {
+    const ai = getAI(customApiKey);
     const response = await ai.models.generateContent({
       model: "gemini-3.1-pro-preview",
       contents: prompt,
@@ -92,7 +99,7 @@ export async function suggestDetailedNiches(params: {
   contentGoal: string;
   businessType: string;
   mainContentGroup: string;
-}): Promise<string[]> {
+}, customApiKey?: string): Promise<string[]> {
   const prompt = `
 Bạn là một chuyên gia sáng tạo nội dung và chiến lược gia marketing.
 Dựa vào các thông tin sau:
@@ -114,6 +121,7 @@ Ví dụ:
 `;
 
   try {
+    const ai = getAI(customApiKey);
     const response = await ai.models.generateContent({
       model: "gemini-3.1-pro-preview",
       contents: prompt,
@@ -135,7 +143,7 @@ Ví dụ:
   }
 }
 
-export async function extractPrompts(script: string, sceneCount: number): Promise<{ imagePrompts: string[], videoPrompts: string[] }> {
+export async function extractPrompts(script: string, sceneCount: number, customApiKey?: string): Promise<{ imagePrompts: string[], videoPrompts: string[] }> {
   const prompt = `
 Bạn là một chuyên gia phân tích kịch bản. Tôi có một kịch bản gồm ${sceneCount} phân cảnh.
 Nhiệm vụ của bạn là trích xuất mô tả hình ảnh (Image Prompt) và mô tả hành động video (Video Prompt) cho TỪNG phân cảnh.
@@ -168,6 +176,7 @@ Chỉ trả về JSON hợp lệ, không kèm theo bất kỳ văn bản nào kh
 `;
 
   try {
+    const ai = getAI(customApiKey);
     const response = await ai.models.generateContent({
       model: "gemini-3.1-pro-preview",
       contents: prompt,
@@ -202,9 +211,8 @@ Chỉ trả về JSON hợp lệ, không kèm theo bất kỳ văn bản nào kh
   }
 }
 
-export async function generateImages(prompt: string, aspectRatio: string = "16:9", count: number = 4): Promise<string[]> {
-  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
-  const imageAi = new GoogleGenAI({ apiKey: apiKey });
+export async function generateImages(prompt: string, aspectRatio: string = "16:9", count: number = 4, customApiKey?: string): Promise<string[]> {
+  const imageAi = getAI(customApiKey);
 
   const promises = Array.from({ length: count }).map(async () => {
     try {
@@ -248,12 +256,9 @@ export async function generateImages(prompt: string, aspectRatio: string = "16:9
   return validResults;
 }
 
-export async function generateVideo(prompt: string, imageBase64?: string, aspectRatio: string = "16:9", onProgress?: (msg: string) => void): Promise<string> {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("Vui lòng chọn API Key để tạo video.");
-  }
-  const videoAi = new GoogleGenAI({ apiKey: apiKey });
+export async function generateVideo(prompt: string, imageBase64?: string, aspectRatio: string = "16:9", onProgress?: (msg: string) => void, customApiKey?: string): Promise<string> {
+  const videoAi = getAI(customApiKey);
+  const apiKey = customApiKey || process.env.API_KEY || process.env.GEMINI_API_KEY;
 
   try {
     const request: any = {
