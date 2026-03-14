@@ -41,7 +41,8 @@ Hãy tạo một ${params.outputFormat} dựa trên các thông tin sau:
 Thông tin bổ sung từ người dùng:
 ${params.additionalContext || "Không có"}
 
-YÊU CẦU QUAN TRỌNG VỀ ĐỊNH DẠNG (BẮT BUỘC TUÂN THỦ):
+YÊU CẦU QUAN TRỌNG VỀ ĐỊNH DẠNG VÀ NỘI DUNG (BẮT BUỘC TUÂN THỦ):
+- Kịch bản, bối cảnh, nhân vật, văn phong BẮT BUỘC phải mang đậm nét văn hóa, con người và bối cảnh Việt Nam (vì đối tượng khách hàng tiếp nhận là người Việt Nam).
 - Viết nội dung chất lượng cao, đúng định dạng yêu cầu.
 - BẮT BUỘC PHẢI VIẾT ĐÚNG ${params.sceneCount} PHÂN CẢNH (SCENE). TUYỆT ĐỐI KHÔNG ĐƯỢC VIẾT THIẾU SỐ LƯỢNG NÀY.
 - Nếu là kịch bản video, KHÔNG DÙNG BẢNG (TABLE). Hãy trình bày kịch bản theo định dạng văn bản chuẩn như ví dụ dưới đây:
@@ -139,6 +140,8 @@ YÊU CẦU:
 - Phân tích từng phân cảnh và tạo ra 1 Image Prompt và 1 Video Prompt tương ứng.
 - Image Prompt: Mô tả chi tiết bối cảnh, nhân vật, trang phục, ánh sáng, góc máy để tạo ảnh tĩnh.
 - Video Prompt: Mô tả hành động, chuyển động của nhân vật/camera dựa trên Image Prompt.
+- BẮT BUỘC: Cả Image Prompt và Video Prompt phải miêu tả rõ nhân vật là người Việt Nam (ví dụ: Vietnamese man, Vietnamese woman, Vietnamese people) và bối cảnh ở Việt Nam (nếu có).
+- BẮT BUỘC: Viết prompt bằng tiếng Anh để AI tạo ảnh/video (như Midjourney, Veo) hiểu tốt nhất.
 - Trả về kết quả dưới dạng JSON với cấu trúc sau:
 {
   "scenes": [
