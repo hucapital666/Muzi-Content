@@ -2,6 +2,15 @@ import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+function handleGeminiError(error: any, defaultMessage: string): never {
+  console.error(defaultMessage, error);
+  const errorMessage = error?.message?.toLowerCase() || "";
+  if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("resource_exhausted")) {
+    throw new Error("Hệ thống đang quá tải (vượt quá giới hạn API miễn phí). Vui lòng đợi 1-2 phút rồi thử lại nhé!");
+  }
+  throw new Error(defaultMessage);
+}
+
 export interface ScriptParams {
   scriptIdea: string;
   sceneCount: number;
@@ -73,8 +82,7 @@ KỊCH BẢN VIDEO (THỜI LƯỢNG: ~XX GIÂY)
 
     return response.text || "Không thể tạo nội dung. Vui lòng thử lại.";
   } catch (error) {
-    console.error("Error generating script:", error);
-    throw new Error("Đã xảy ra lỗi khi gọi Gemini API.");
+    handleGeminiError(error, "Đã xảy ra lỗi khi gọi Gemini API.");
   }
 }
 
@@ -123,8 +131,7 @@ Ví dụ:
     }
     return [];
   } catch (error) {
-    console.error("Error suggesting niches:", error);
-    throw new Error("Đã xảy ra lỗi khi tạo gợi ý ngách nội dung.");
+    handleGeminiError(error, "Đã xảy ra lỗi khi tạo gợi ý ngách nội dung.");
   }
 }
 
@@ -186,8 +193,7 @@ Chỉ trả về JSON hợp lệ, không kèm theo bất kỳ văn bản nào kh
     
     return { imagePrompts, videoPrompts };
   } catch (error) {
-    console.error("Error extracting prompts:", error);
-    throw new Error("Đã xảy ra lỗi khi trích xuất prompt.");
+    handleGeminiError(error, "Đã xảy ra lỗi khi trích xuất prompt.");
   }
 }
 
@@ -217,8 +223,12 @@ export async function generateImages(prompt: string, aspectRatio: string = "16:9
         }
       }
       return null;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating image:", error);
+      const errorMessage = error?.message?.toLowerCase() || "";
+      if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("resource_exhausted")) {
+        throw new Error("Hệ thống đang quá tải (vượt quá giới hạn API miễn phí). Vui lòng đợi 1-2 phút rồi thử lại nhé!");
+      }
       return null;
     }
   });
@@ -282,7 +292,11 @@ export async function generateVideo(prompt: string, imageBase64?: string, aspect
     
     const blob = await response.blob();
     return URL.createObjectURL(blob);
-  } catch (error) {
+  } catch (error: any) {
+    const errorMessage = error?.message?.toLowerCase() || "";
+    if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("resource_exhausted")) {
+      throw new Error("Hệ thống đang quá tải (vượt quá giới hạn API miễn phí). Vui lòng đợi 1-2 phút rồi thử lại nhé!");
+    }
     console.error("Error generating video:", error);
     throw error;
   }
