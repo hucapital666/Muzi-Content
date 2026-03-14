@@ -14,7 +14,7 @@ import {
 } from './data';
 import { SelectDropdown } from './components/SelectDropdown';
 import { MultiSelectDropdown } from './components/MultiSelectDropdown';
-import { generateScript, generateImages, generateVideo, extractPrompts, ScriptParams } from './services/gemini';
+import { generateScript, generateImages, generateVideo, extractPrompts, suggestDetailedNiches, ScriptParams } from './services/gemini';
 import Markdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { Loader2, Copy, Check, Sparkles, Image as ImageIcon, Video, FileText, KeyRound } from 'lucide-react';
@@ -49,6 +49,8 @@ export default function App() {
     additionalContext: ""
   });
 
+  const [dynamicNiches, setDynamicNiches] = useState<string[]>([]);
+  const [isGeneratingNiches, setIsGeneratingNiches] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -102,6 +104,7 @@ export default function App() {
 
   // Update detailed niche when main content group changes
   useEffect(() => {
+    setDynamicNiches([]); // Reset dynamic niches
     // Map main content group to the keys in detailedNiches
     let key = "";
     if (params.mainContentGroup.includes("bán hàng") || params.mainContentGroup.includes("giới thiệu sản phẩm")) {
@@ -149,6 +152,28 @@ export default function App() {
     if (params.mainContentGroup.includes("review") || params.mainContentGroup.includes("so sánh")) return "REVIEW / FEEDBACK / CASE STUDY";
     if (params.mainContentGroup.includes("podcast")) return "PODCAST";
     return "BÁN SẢN PHẨM"; // fallback
+  };
+
+  const handleSuggestNiches = async () => {
+    setIsGeneratingNiches(true);
+    try {
+      const niches = await suggestDetailedNiches({
+        scriptIdea: params.scriptIdea,
+        sceneCount: params.sceneCount,
+        contentGoal: params.contentGoal,
+        businessType: params.businessType,
+        mainContentGroup: params.mainContentGroup
+      });
+      if (niches.length > 0) {
+        setDynamicNiches(niches);
+        setParams(prev => ({ ...prev, detailedNiche: niches[0] }));
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Lỗi khi tạo gợi ý ngách nội dung. Vui lòng thử lại.");
+    } finally {
+      setIsGeneratingNiches(false);
+    }
   };
 
   const handleGenerate = async () => {
@@ -347,14 +372,32 @@ export default function App() {
                 onChange={(val) => handleSingleSelect('mainContentGroup', val)}
               />
 
-              {detailedNiches[currentNicheKey()] && (
-                <SelectDropdown
-                  label={`4. Ngách nội dung chi tiết (${currentNicheKey()})`}
-                  options={detailedNiches[currentNicheKey()]}
-                  selected={params.detailedNiche}
-                  onChange={(val) => handleSingleSelect('detailedNiche', val)}
-                />
-              )}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
+                    4. Ngách nội dung chi tiết
+                  </h3>
+                  <button
+                    onClick={handleSuggestNiches}
+                    disabled={isGeneratingNiches}
+                    className="text-xs flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium py-1.5 px-3 rounded-md transition-colors disabled:opacity-50"
+                  >
+                    {isGeneratingNiches ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                    Tạo 20 ngách bằng AI
+                  </button>
+                </div>
+                <select
+                  value={params.detailedNiche}
+                  onChange={(e) => handleSingleSelect('detailedNiche', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
+                >
+                  {(dynamicNiches.length > 0 ? dynamicNiches : (detailedNiches[currentNicheKey()] || [])).map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <SelectDropdown
                 label="5. Kiểu triển khai nội dung"

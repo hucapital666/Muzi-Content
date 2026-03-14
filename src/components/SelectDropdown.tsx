@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface SelectDropdownProps {
-  label: string;
+  label?: string;
   options: string[];
   selected: string;
   onChange: (value: string) => void;
@@ -10,7 +10,7 @@ interface SelectDropdownProps {
 export function SelectDropdown({ label, options, selected, onChange }: SelectDropdownProps) {
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">{label}</h3>
+      {label && <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">{label}</h3>}
       <select
         value={selected}
         onChange={(e) => onChange(e.target.value)}

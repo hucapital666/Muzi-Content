@@ -77,6 +77,56 @@ KỊCH BẢN VIDEO (THỜI LƯỢNG: ~XX GIÂY)
   }
 }
 
+export async function suggestDetailedNiches(params: {
+  scriptIdea: string;
+  sceneCount: number;
+  contentGoal: string;
+  businessType: string;
+  mainContentGroup: string;
+}): Promise<string[]> {
+  const prompt = `
+Bạn là một chuyên gia sáng tạo nội dung và chiến lược gia marketing.
+Dựa vào các thông tin sau:
+- Ý tưởng kịch bản nội dung: ${params.scriptIdea || "Không có"}
+- Số lượng Phân cảnh (Scene): ${params.sceneCount}
+- Mục tiêu nội dung: ${params.contentGoal}
+- Loại hình kinh doanh: ${params.businessType}
+- Nhóm nội dung chính: ${params.mainContentGroup}
+
+Hãy tạo ra danh sách đúng 20 ngách nội dung chi tiết (detailed niches) cực kỳ phù hợp, sáng tạo và thực tế để người dùng có thể chọn làm chủ đề cho video của họ.
+Các ngách này phải cụ thể, ví dụ thay vì "Thời trang", hãy viết "Thời trang công sở nữ mùa hè", "Phối đồ đi chơi cho nam gầy", v.v.
+
+Trả về kết quả dưới dạng JSON array chứa các chuỗi (string). Chỉ trả về JSON hợp lệ, không kèm theo bất kỳ văn bản nào khác.
+Ví dụ:
+[
+  "Ngách 1",
+  "Ngách 2"
+]
+`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: prompt,
+      config: {
+        temperature: 0.7,
+        responseMimeType: "application/json",
+      }
+    });
+
+    const text = response.text || "[]";
+    const data = JSON.parse(text);
+    
+    if (Array.isArray(data) && data.length > 0) {
+      return data;
+    }
+    return [];
+  } catch (error) {
+    console.error("Error suggesting niches:", error);
+    throw new Error("Đã xảy ra lỗi khi tạo gợi ý ngách nội dung.");
+  }
+}
+
 export async function extractPrompts(script: string, sceneCount: number): Promise<{ imagePrompts: string[], videoPrompts: string[] }> {
   const prompt = `
 Bạn là một chuyên gia phân tích kịch bản. Tôi có một kịch bản gồm ${sceneCount} phân cảnh.
