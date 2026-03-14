@@ -17,7 +17,7 @@ import { MultiSelectDropdown } from './components/MultiSelectDropdown';
 import { generateScript, generateImages, generateVideo, extractPrompts, suggestDetailedNiches, ScriptParams } from './services/gemini';
 import Markdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
-import { Loader2, Copy, Check, Sparkles, Image as ImageIcon, Video, FileText, KeyRound } from 'lucide-react';
+import { Loader2, Copy, Check, Sparkles, Image as ImageIcon, Video, FileText, KeyRound, Download, Upload } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -288,6 +288,69 @@ export default function App() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+  const handleSaveProject = () => {
+    const projectData = {
+      version: "1.0",
+      params,
+      result,
+      dynamicNiches,
+      imagePrompts,
+      imageAspectRatio,
+      generatedImages,
+      videoPrompts,
+      videoAspectRatio,
+      useGeneratedImage,
+      selectedImageIndex
+    };
+    
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `script-project-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleLoadProject = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string);
+        if (data.version) {
+          if (data.params) setParams(data.params);
+          if (data.result !== undefined) setResult(data.result);
+          if (data.dynamicNiches) setDynamicNiches(data.dynamicNiches);
+          if (data.imagePrompts) setImagePrompts(data.imagePrompts);
+          if (data.imageAspectRatio) setImageAspectRatio(data.imageAspectRatio);
+          if (data.generatedImages) setGeneratedImages(data.generatedImages);
+          if (data.videoPrompts) setVideoPrompts(data.videoPrompts);
+          if (data.videoAspectRatio) setVideoAspectRatio(data.videoAspectRatio);
+          if (data.useGeneratedImage) setUseGeneratedImage(data.useGeneratedImage);
+          if (data.selectedImageIndex) setSelectedImageIndex(data.selectedImageIndex);
+          
+          setIsGenerating(false);
+          setIsExtracting(false);
+          setIsGeneratingNiches(false);
+          setIsGeneratingImage(Array(data.params?.sceneCount || 6).fill(false));
+          setIsGeneratingVideo(Array(data.params?.sceneCount || 6).fill(false));
+          setVideoProgress(Array(data.params?.sceneCount || 6).fill(""));
+          setGeneratedVideos(Array(data.params?.sceneCount || 6).fill(null));
+        }
+      } catch (error) {
+        console.error("Failed to parse project file", error);
+        alert("File không hợp lệ hoặc bị lỗi.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   return (
@@ -674,15 +737,31 @@ export default function App() {
                 <FileText className="w-5 h-5 text-indigo-500" />
                 Kết quả Kịch bản
               </h2>
-              {result && (
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
-                >
-                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                  {copied ? 'Đã copy' : 'Copy'}
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                  Tải lên
+                  <input type="file" accept=".json" className="hidden" onChange={handleLoadProject} />
+                </label>
+                {result && (
+                  <>
+                    <button
+                      onClick={handleSaveProject}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      Lưu
+                    </button>
+                    <button
+                      onClick={handleCopy}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                    >
+                      {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                      {copied ? 'Đã copy' : 'Copy'}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
             
             <div className="p-6 flex-1 overflow-y-auto">

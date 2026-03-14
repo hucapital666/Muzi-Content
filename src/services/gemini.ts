@@ -145,7 +145,12 @@ ${script}
 
 YÊU CẦU:
 - Phân tích từng phân cảnh và tạo ra 1 Image Prompt và 1 Video Prompt tương ứng.
-- Image Prompt: Mô tả chi tiết bối cảnh, nhân vật, trang phục, ánh sáng, góc máy để tạo ảnh tĩnh.
+- Image Prompt: Mô tả CỰC KỲ CHI TIẾT để tạo ra bức ảnh chân thực nhất (photorealistic). BẮT BUỘC phải bao gồm các yếu tố sau:
+  + Nhân vật: Độ tuổi, giới tính, biểu cảm, trang phục, hành động.
+  + Bối cảnh: Không gian xung quanh, chi tiết nền, thời gian trong ngày.
+  + Góc máy: Cận cảnh (close-up), toàn cảnh (wide shot), góc cao, góc thấp...
+  + Ánh sáng: Ánh sáng tự nhiên, ánh sáng điện ảnh (cinematic lighting), ánh sáng neon, ngược sáng...
+  + Chất lượng ảnh: Thêm các từ khóa như "highly detailed, photorealistic, 8k resolution, masterpiece, cinematic".
 - Video Prompt: Mô tả hành động, chuyển động của nhân vật/camera dựa trên Image Prompt.
 - BẮT BUỘC: Cả Image Prompt và Video Prompt phải miêu tả rõ nhân vật là người Việt Nam (ví dụ: Vietnamese man, Vietnamese woman, Vietnamese people) và bối cảnh ở Việt Nam (nếu có).
 - BẮT BUỘC: Viết prompt bằng tiếng Anh để AI tạo ảnh/video (như Midjourney, Veo) hiểu tốt nhất.
