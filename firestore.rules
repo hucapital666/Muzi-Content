@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (matches user's authentication UID)
+    // Fields:
+    //   - apiKey: string (optional, max 100 chars) - The user's custom API key
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+             (request.resource.data[field] is string &&
+              request.resource.data[field].size() >= minLen &&
+              request.resource.data[field].size() <= maxLen);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidUser() {
+      return hasOnlyAllowedFields(['apiKey']) &&
+             isValidOptionalString('apiKey', 0, 100);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser();
+      allow update: if isOwner(userId) && isValidUser();
+      allow delete: if isOwner(userId);
+    }
+  }
+}

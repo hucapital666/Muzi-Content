@@ -1,0 +1,23 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the application",
+      "type": "object",
+      "properties": {
+        "apiKey": {
+          "type": "string",
+          "description": "The user's custom Gemini API key"
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "Stores user-specific data, such as their custom API key."
+    }
+  }
+}

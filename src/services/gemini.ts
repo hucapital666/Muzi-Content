@@ -217,7 +217,7 @@ export async function generateImages(prompt: string, aspectRatio: string = "16:9
   const promises = Array.from({ length: count }).map(async () => {
     try {
       const response = await imageAi.models.generateContent({
-        model: 'gemini-2.5-flash-image',
+        model: 'gemini-3.1-flash-image-preview',
         contents: {
           parts: [
             { text: prompt }
