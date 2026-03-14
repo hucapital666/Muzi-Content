@@ -358,10 +358,24 @@ export default function App() {
       {/* Left Panel: Configuration Form */}
       <div className="w-full md:w-1/2 lg:w-5/12 md:h-screen md:overflow-y-auto border-r border-gray-200 bg-white p-6 md:p-8 flex flex-col">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-indigo-600" />
-            Muzi Content
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-indigo-600" />
+              Muzi Content
+            </h1>
+            <button
+              onClick={handleSelectApiKey}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                hasApiKey 
+                  ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100' 
+                  : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'
+              }`}
+              title="Đăng nhập Google để chọn API Key của bạn"
+            >
+              <KeyRound className="w-4 h-4" />
+              {hasApiKey ? 'Đã kết nối API Key' : 'Đăng nhập / Chọn API Key'}
+            </button>
+          </div>
           
           <div className="flex space-x-2 mt-6 border-b border-gray-200 pb-0">
             <button 
@@ -613,15 +627,8 @@ export default function App() {
               {!hasApiKey && (
                 <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 mb-6 flex flex-col items-start gap-3">
                   <p className="text-sm text-amber-800">
-                    Bạn cần chọn API Key (có hỗ trợ Veo) để sử dụng tính năng tạo Video.
+                    Bạn cần <strong>Đăng nhập / Chọn API Key</strong> ở góc trên để sử dụng tính năng tạo Video (yêu cầu API Key có hỗ trợ Veo).
                   </p>
-                  <button 
-                    onClick={handleSelectApiKey}
-                    className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    <KeyRound className="w-4 h-4" />
-                    Chọn API Key
-                  </button>
                 </div>
               )}
 
